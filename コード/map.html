@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        /* マップを含むdiv要素のサイズを定義するために、常にマップの高さを明示的に設定 */
+        #map {
+            height: 100%;
+        }
+        /* サンプルページをウィンドウいっぱいに */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var directionsService;
+        var directionsRenderer;
+        var num = 100;
+        var markers = [];
+        var marker_state;
+        var place_state;
+        var map;
+        var i = 0;
+        var URL;
+        var res;
+        var data;
+        var num_state;
+        var contentString = '<div id="content">'+
+            '<div id="siteNotice">'+
+            '</div>'+
+            '<h1 id="firstHeading" class="firstHeading">名前</h1>'+
+            '<input id="help" type="button" value="応援に向かう" onclick="helpButtonClick();"/><br /><br />'+  // ボタン
+            '<div id="output"></div>'+ 
+            '</div>'+
+            '</div>';
+        var myContentString =  '<div id="mycontent">'+
+            '<div id="mysiteNotice">'+
+            '</div>'+
+            '<h1 id="myfirstHeading" class="myfirstHeading">名前</h1>'+
+            '</div>'+
+            '</div>';
+        
+        function init() {
+            URL = '<server_URL>';
+            async function getPlace() {
+                res = await fetch(URL);
+                data = await res.json();
+                return data;
+            }
+
+            var places = [];
+            var id = [];
+
+            getPlace()
+                .then(data => {
+                    console.log(data);
+
+                    for(var tmp of data) {
+                        console.log(tmp.id);
+                        var locate = new google.maps.LatLng(parseFloat(tmp.location.lat), parseFloat(tmp.location.long));
+                        id.push(tmp.name);
+                        places.push(locate);
+                    }
+                    initMap(places, id);
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        }
+
+        function initMap(places, id) {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: {lat: '<latitude>', lng: '<longitude>'}
+            });
+
+            var infowindow = new google.maps.infoWindow({
+                content: contentString
+            });
+
+            var marker = new google.maps.Marker({
+                icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                position: new google.maps.LatLng('<latitude>', '<longitude>'),
+                map: map,
+                title: 'marker'
+            })
+            markers.push(marker);
+            var marker_id = "<name>";
+            var state_place = new google.maps.LatLng('<latitude>', '<longitude>');
+            google.maps.event.addListener(marker, 'click', (function(marker, marker_id, state_place) {
+                return function() {
+                    myInfoWindow.open(map, marker);
+                    marker_state = marker;
+                    place_state = marker.position;
+                    setTimeout(() => {
+                        document.getElementById("myfirstHeading").textContent = marker_id;
+                    }, 20)
+                }
+            })(marker, marker_id, state_place));
+        
+            for(var place in places) {
+                var marker = new google.maps.Marker({
+                    icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                    position: places[place],
+                    map: map,
+                    title: 'marker'
+                });
+
+                markers.push(marker);
+                var marker_id = id[place];
+                var state_place = place[place];
+                var num = Number(place);
+
+                google.maps.event.addListener(marker, 'click', (function(marker, marker_id, state_place, num) {
+                    return function() {
+                        infowindow.open(map, marker);
+                        
+                    }
+                }))
+            }
+        }
+    </script>
+</body>
+</html>
